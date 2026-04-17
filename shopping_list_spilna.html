@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Список покупок — Настя і Сергій</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f4;
+    --color-background-info: #e6f1fb;
+    --color-background-success: #eaf3de;
+    --color-background-danger: #fcebeb;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b6b;
+    --color-text-tertiary: #a0a0a0;
+    --color-text-info: #185fa5;
+    --color-text-success: #3b6d11;
+    --color-text-danger: #a32d2d;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --color-border-primary: rgba(0,0,0,0.35);
+    --color-border-info: #b5d4f4;
+    --color-border-success: #c0dd97;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1e;
+      --color-background-secondary: #2c2c2e;
+      --color-background-info: #0c447c;
+      --color-background-success: #27500a;
+      --color-background-danger: #791f1f;
+      --color-text-primary: #f2f2f7;
+      --color-text-secondary: #aeaeb2;
+      --color-text-tertiary: #636366;
+      --color-text-info: #b5d4f4;
+      --color-text-success: #c0dd97;
+      --color-text-danger: #f7c1c1;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.2);
+      --color-border-primary: rgba(255,255,255,0.35);
+      --color-border-info: #185fa5;
+      --color-border-success: #3b6d11;
+    }
+  }
+  body { font-family: var(--font-sans); background: var(--color-background-secondary); min-height: 100vh; display: flex; justify-content: center; padding: 1.5rem 1rem; }
+  .app { width: 100%; max-width: 480px; }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .logo { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .sync-badge { margin-left: auto; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; transition: all 0.3s; }
+  .sync-badge.online  { background: var(--color-background-success); color: var(--color-text-success); }
+  .sync-badge.offline { background: var(--color-background-danger);  color: var(--color-text-danger); }
+  .sync-badge.loading { background: var(--color-background-secondary); color: var(--color-text-tertiary); }
+  .who-bar { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+  .who-btn { flex: 1; padding: 8px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .who-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+  .add-row input { flex: 1; padding: 8px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 14px; outline: none; }
+  .add-row input:focus { border-color: var(--color-border-primary); box-shadow: 0 0 0 2px rgba(0,0,0,0.06); }
+  .add-row button { padding: 8px 16px; border-radius: var(--border-radius-md); border: none; background: var(--color-text-primary); color: var(--color-background-primary); font-size: 14px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+  .add-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; margin-top: 1.25rem; }
+  .items-list { display: flex; flex-direction: column; gap: 6px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); transition: all 0.2s; }
+  .item.bought { opacity: 0.5; }
+  .item.bought .item-name { text-decoration: line-through; color: var(--color-text-tertiary); }
+  .checkbox { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--color-border-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: transparent; transition: all 0.15s; }
+  .checkbox.checked { background: var(--color-background-success); border-color: var(--color-border-success); }
+  .check-mark { width: 10px; height: 6px; border-left: 2px solid var(--color-text-success); border-bottom: 2px solid var(--color-text-success); transform: rotate(-45deg) translate(1px, -1px); display: none; }
+  .checkbox.checked .check-mark { display: block; }
+  .item-name { flex: 1; font-size: 14px; color: var(--color-text-primary); word-break: break-word; }
+  .item-meta { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+  .item-who { font-size: 11px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .who-wife { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .who-me   { background: var(--color-background-info);   color: var(--color-text-info); }
+  .del-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: var(--color-text-tertiary); padding: 0 2px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+  .item:hover .del-btn { opacity: 1; }
+  .empty { text-align: center; padding: 2rem; color: var(--color-text-tertiary); font-size: 14px; }
+  .stats { display: flex; gap: 8px; margin-top: 1.25rem; }
+  .stat { flex: 1; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px; text-align: center; }
+  .stat-n { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-l { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .clear-btn { width: 100%; margin-top: 1rem; padding: 8px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-secondary); font-size: 13px; cursor: pointer; }
+  .clear-btn:hover { background: var(--color-background-secondary); }
+  .hint { margin-top: 1rem; padding: 10px 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; border: 0.5px solid var(--color-border-tertiary); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <span style="font-size:18px;">🛒</span>
+    <span class="logo">Настя і Сергій</span>
+    <span class="sync-badge loading" id="syncBadge">● підключення...</span>
+  </div>
+
+  <div class="who-bar">
+    <button class="who-btn active" id="btnWife" onclick="setWho('wife')">👩 Настя</button>
+    <button class="who-btn"        id="btnMe"   onclick="setWho('me')">👨 Сергій</button>
+  </div>
+
+  <div class="add-row">
+    <input id="newItem" type="text" placeholder="Додати товар..." maxlength="80"
+           onkeydown="if(event.key==='Enter')addItem()" />
+    <button id="addBtn" onclick="addItem()">+ Додати</button>
+  </div>
+
+  <div id="pendingSection">
+    <div class="section-label">Потрібно купити</div>
+    <div class="items-list" id="pendingList"><div class="empty">Завантаження...</div></div>
+  </div>
+
+  <div id="boughtSection" style="display:none;">
+    <div class="section-label">Вже куплено</div>
+    <div class="items-list" id="boughtList"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="statTotal">—</div><div class="stat-l">всього</div></div>
+    <div class="stat"><div class="stat-n" id="statDone">—</div><div class="stat-l">куплено</div></div>
+    <div class="stat"><div class="stat-n" id="statLeft">—</div><div class="stat-l">залишилось</div></div>
+  </div>
+
+  <button class="clear-btn" onclick="clearBought()">Очистити куплені</button>
+
+  <div class="hint">
+    🔴 Зміни синхронізуються між усіма пристроями в реальному часі через Firebase.
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDSG1n3uyHChXBLsPq1iWl0IfbNDIMf6HI",
+  authDomain: "nastya-serhiy-shop.firebaseapp.com",
+  databaseURL: "https://nastya-serhiy-shop-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nastya-serhiy-shop",
+  storageBucket: "nastya-serhiy-shop.firebasestorage.app",
+  messagingSenderId: "42811648631",
+  appId: "1:42811648631:web:adccb2ee17e19b35bab472"
+};
+
+const app     = initializeApp(firebaseConfig);
+const db      = getDatabase(app);
+const listRef = ref(db, 'items');
+
+let currentWho = 'wife';
+let items      = {};
+
+const badge  = document.getElementById('syncBadge');
+const addBtn = document.getElementById('addBtn');
+
+function setBadge(state) {
+  badge.className = 'sync-badge ' + state;
+  badge.textContent =
+    state === 'online'  ? '● онлайн'         :
+    state === 'offline' ? '● офлайн'         :
+                          '● підключення...';
+}
+
+function whoLabel(who) {
+  return who === 'wife' ? 'Настя' : 'Сергій';
+}
+
+function timeAgo(ms) {
+  const d = Date.now() - ms;
+  if (d < 60000)    return 'щойно';
+  if (d < 3600000)  return Math.floor(d / 60000)  + ' хв тому';
+  if (d < 86400000) return Math.floor(d / 3600000) + ' год тому';
+  return Math.floor(d / 86400000) + ' дн тому';
+}
+
+function render() {
+  const all     = Object.entries(items).map(([id, v]) => ({ id, ...v }));
+  const pending = all.filter(i => !i.bought).sort((a, b) => a.time - b.time);
+  const bought  = all.filter(i =>  i.bought).sort((a, b) => a.time - b.time);
+
+  function makeItem(item) {
+    const wClass = item.who === 'wife' ? 'who-wife' : 'who-me';
+    const bInfo  = item.bought && item.boughtBy
+      ? ' · ' + whoLabel(item.boughtBy) : '';
+    return `<div class="item${item.bought ? ' bought' : ''}">
+      <div class="checkbox${item.bought ? ' checked' : ''}" onclick="toggleItem('${item.id}')">
+        <div class="check-mark"></div>
+      </div>
+      <div class="item-name">${item.name}</div>
+      <span class="item-who ${wClass}">${whoLabel(item.who)}</span>
+      <span class="item-meta">${timeAgo(item.time)}${bInfo}</span>
+      <button class="del-btn" onclick="deleteItem('${item.id}')" title="Видалити">✕</button>
+    </div>`;
+  }
+
+  document.getElementById('pendingList').innerHTML =
+    pending.length ? pending.map(makeItem).join('') :
+    '<div class="empty">Список порожній — все куплено! 🎉</div>';
+
+  const bSec = document.getElementById('boughtSection');
+  if (bought.length) {
+    bSec.style.display = '';
+    document.getElementById('boughtList').innerHTML = bought.map(makeItem).join('');
+  } else {
+    bSec.style.display = 'none';
+  }
+
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statDone').textContent  = bought.length;
+  document.getElementById('statLeft').textContent  = pending.length;
+}
+
+/* ── глобальні функції для onclick у HTML ── */
+window.setWho = function(who) {
+  currentWho = who;
+  document.getElementById('btnWife').classList.toggle('active', who === 'wife');
+  document.getElementById('btnMe').classList.toggle('active',   who === 'me');
+};
+
+window.addItem = async function() {
+  const input = document.getElementById('newItem');
+  const name  = input.value.trim();
+  if (!name) return;
+  addBtn.disabled = true;
+  await push(listRef, {
+    name,
+    bought:   false,
+    who:      currentWho,
+    boughtBy: null,
+    time:     Date.now()
+  });
+  input.value     = '';
+  addBtn.disabled = false;
+  input.focus();
+};
+
+window.toggleItem = async function(id) {
+  const item   = items[id];
+  if (!item) return;
+  const bought = !item.bought;
+  await update(ref(db, 'items/' + id), {
+    bought,
+    boughtBy: bought ? currentWho : null
+  });
+};
+
+window.deleteItem = async function(id) {
+  await remove(ref(db, 'items/' + id));
+};
+
+window.clearBought = async function() {
+  const updates = {};
+  Object.entries(items).forEach(([id, item]) => {
+    if (item.bought) updates['items/' + id] = null;
+  });
+  if (Object.keys(updates).length) await update(ref(db), updates);
+};
+
+/* ── слухаємо Firebase в реальному часі ── */
+onValue(listRef, snapshot => {
+  items = snapshot.val() || {};
+  setBadge('online');
+  render();
+}, err => {
+  console.error(err);
+  setBadge('offline');
+});
+</script>
+</body>
+</html>
